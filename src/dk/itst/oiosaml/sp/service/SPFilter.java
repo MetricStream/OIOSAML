@@ -25,8 +25,6 @@
 package dk.itst.oiosaml.sp.service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.Filter;
@@ -41,19 +39,19 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import dk.itst.oiosaml.logging.Logger;
-import dk.itst.oiosaml.logging.LoggerFactory;
 import org.apache.commons.configuration.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.security.BasicSecurityConfiguration;
+import org.opensaml.xml.signature.SignatureConstants;
 
-import dk.itst.oiosaml.common.SAMLUtil;
-import dk.itst.oiosaml.configuration.FileConfiguration;
 import dk.itst.oiosaml.configuration.SAMLConfiguration;
 import dk.itst.oiosaml.configuration.SAMLConfigurationFactory;
 import dk.itst.oiosaml.error.Layer;
 import dk.itst.oiosaml.error.WrappedException;
 import dk.itst.oiosaml.logging.Audit;
+import dk.itst.oiosaml.logging.Logger;
+import dk.itst.oiosaml.logging.LoggerFactory;
 import dk.itst.oiosaml.logging.Operation;
 import dk.itst.oiosaml.sp.UserAssertion;
 import dk.itst.oiosaml.sp.UserAssertionHolder;
@@ -232,6 +230,12 @@ public class SPFilter implements Filter {
 
 		if (conf.isConfigured()) {
 			try {
+				//Added by MSI
+				BasicSecurityConfiguration secConfig = (BasicSecurityConfiguration) org.opensaml.Configuration.getGlobalSecurityConfiguration();
+				String signatureAlgorithmURI = SAMLConfigurationFactory.getConfiguration().getSystemConfiguration().getString(Constants.SIGNON_SIGNATURE_METHOD, SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
+				secConfig.registerSignatureAlgorithmURI("RSA", signatureAlgorithmURI);
+				//Added by MSI
+
 				Configuration conf = SAMLConfigurationFactory.getConfiguration().getSystemConfiguration();
 				if (conf.getBoolean(Constants.PROP_DEVEL_MODE, false)) {
 					develMode = new DevelModeImpl();

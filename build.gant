@@ -8,7 +8,7 @@ testSrcDir = 'test'
 javadocsDir = 'target/docs'
 testReports = 'target/reports'
 webDir = 'webapp'
-version = 'unknown'
+version = '21204-msi1'
 
 ant.property(name: 'ivy.checksums', value: '')
 

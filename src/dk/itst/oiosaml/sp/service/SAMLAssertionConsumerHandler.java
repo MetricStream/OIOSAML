@@ -45,6 +45,7 @@ import dk.itst.oiosaml.sp.model.OIOAssertion;
 import dk.itst.oiosaml.sp.model.OIOResponse;
 import dk.itst.oiosaml.sp.model.RelayState;
 import dk.itst.oiosaml.sp.model.validation.AssertionValidator;
+import dk.itst.oiosaml.sp.service.session.Request;
 import dk.itst.oiosaml.sp.service.util.ArtifactExtractor;
 import dk.itst.oiosaml.sp.service.util.Constants;
 import dk.itst.oiosaml.sp.service.util.HTTPUtils;
@@ -167,11 +168,16 @@ public class SAMLAssertionConsumerHandler implements SAMLHandler {
 			session.setAttribute(Constants.SESSION_USER_ASSERTION, userAssertion);
 		}
 
-		if (relayState.getRelayState() != null) {
-			HTTPUtils.sendResponse(ctx.getSessionHandler().getRequest(relayState.getRelayState()), ctx);
-		} else {
-			HTTPUtils.sendResponse(null, ctx);
+		Request request = null;
+		String state = relayState.getRelayState();
+		if (state != null && !state.isEmpty()) {
+			try {
+				request = ctx.getSessionHandler().getRequest(state);
+			} catch (IllegalArgumentException e) {
+				log.warn("Relay State for the request could not be retrieved.");
+			}
 		}
+		HTTPUtils.sendResponse(request, ctx);
 	}
 
     private boolean invokeAuthenticationHandler(RequestContext ctx, UserAssertion userAssertion) {

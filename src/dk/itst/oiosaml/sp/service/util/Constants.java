@@ -217,5 +217,11 @@ public interface Constants {
 	static final String IDP_METADATA_FILE = "common.saml2.metadata.idp.filename";
 	static final String IDP_METADATA_DIRECTORY = "common.saml2.metadata.idp.directory";
 
-	
+	/*
+	 * Properties used for signatures that is communicated between the SP and Idp.
+	 * 
+	 * */
+	static final String SIGNON_SIGNATURE_METHOD = "oiosaml-sp.service.signon.ds.signaturemethod";
+	static final String SIGNON_DIGEST_METHOD = "oiosaml-sp.service.signon.ds.digestmethod";
+	static final String ALLOWED_NOTBEFORE_TIME_MARGIN = "oiosaml-sp.assertion.allowed.notbefore.timemargin";
 }

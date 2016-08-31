@@ -29,8 +29,11 @@ import javax.xml.crypto.dsig.XMLSignature;
 
 import dk.itst.oiosaml.logging.Logger;
 import dk.itst.oiosaml.logging.LoggerFactory;
+import dk.itst.oiosaml.sp.service.util.Constants;
+
 import org.opensaml.Configuration;
 import org.opensaml.common.SignableSAMLObject;
+import org.opensaml.common.impl.SAMLObjectContentReference;
 import org.opensaml.ws.soap.soap11.Body;
 import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.security.SAMLSignatureProfileValidator;
@@ -43,16 +46,20 @@ import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.SecurityHelper;
 import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.x509.BasicX509Credential;
+import org.opensaml.xml.signature.ContentReference;
 import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.signature.SignatureConstants;
 import org.opensaml.xml.signature.SignatureException;
 import org.opensaml.xml.signature.SignatureValidator;
 import org.opensaml.xml.signature.Signer;
+import org.opensaml.xml.signature.URIContentReference;
 import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLHelper;
 import org.opensaml.xml.validation.ValidationException;
 import org.w3c.dom.Element;
 
 import dk.itst.oiosaml.common.SAMLUtil;
+import dk.itst.oiosaml.configuration.SAMLConfigurationFactory;
 import dk.itst.oiosaml.error.Layer;
 import dk.itst.oiosaml.error.WrappedException;
 
@@ -106,6 +113,7 @@ public class OIOSamlObject {
 		obj.addNamespace(new Namespace(XMLSignature.XMLNS, "ds"));
 	
 	    signature.setSigningCredential(signingCredential);
+	    signature.setSignatureAlgorithm(SAMLConfigurationFactory.getConfiguration().getSystemConfiguration().getString(Constants.SIGNON_SIGNATURE_METHOD, SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1));
 	    try {
 	        SecurityHelper.prepareSignatureParams(signature, signingCredential, null, null);
 	    } catch (SecurityException e) {
@@ -113,6 +121,20 @@ public class OIOSamlObject {
 	    }
 	    
 	    ((SignableSAMLObject)obj).setSignature(signature);
+
+	    String digestMethod = SAMLConfigurationFactory.getConfiguration().getSystemConfiguration().getString(Constants.SIGNON_DIGEST_METHOD);
+	    if (digestMethod != null && !digestMethod.isEmpty()){
+			for (ContentReference cr : ((SignableSAMLObject) obj).getSignature().getContentReferences()) {
+	    		if (cr instanceof SAMLObjectContentReference) {
+
+	    			SAMLObjectContentReference samlObjContentReference = (SAMLObjectContentReference) cr;
+	    			samlObjContentReference.setDigestAlgorithm(digestMethod);
+	    		} else if (cr instanceof URIContentReference) {
+	    			URIContentReference uriContentReference = (URIContentReference) cr;
+	    			uriContentReference.setDigestAlgorithm(digestMethod);
+	    		}
+	    	}
+	    }
 	
 	    try {
 	        Marshaller marshaller = Configuration.getMarshallerFactory().getMarshaller(obj);

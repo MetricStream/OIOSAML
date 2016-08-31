@@ -26,7 +26,9 @@ package dk.itst.oiosaml.sp.model.validation;
 import org.joda.time.DateTime;
 import org.opensaml.saml2.core.Assertion;
 
+import dk.itst.oiosaml.configuration.SAMLConfigurationFactory;
 import dk.itst.oiosaml.sp.model.OIOAssertion;
+import dk.itst.oiosaml.sp.service.util.Constants;
 
 public class BasicAssertionValidator implements AssertionValidator {
 
@@ -57,6 +59,23 @@ public class BasicAssertionValidator implements AssertionValidator {
     	DateTime conditionTime = assertion.getConditionTime();
     	if (conditionTime == null || !conditionTime.isAfterNow()) {
     		throw new ValidationException("Condition NotOnOrAfter is after now: " + conditionTime);
+    	}
+
+    	DateTime conditionNotBeforeTime = assertion.getAssertion().getConditions().getNotBefore();
+    	if (conditionNotBeforeTime == null) {
+    		throw new ValidationException("Condition NotBefore is before now: " + conditionNotBeforeTime);
+    	}
+
+    	//Kept for reference only
+    	/*SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    	format.setTimeZone(TimeZone.getTimeZone(TimeZone.getDefault().getDisplayName()));
+    	String DateToStr = format.format(conditionNotBeforeTime.toDate()) +":::"+ format.format(new Date());*/
+    	//Kept for reference only
+
+		String allowedNotBeforeTimeMargin = SAMLConfigurationFactory.getConfiguration().getSystemConfiguration().getString(Constants.ALLOWED_NOTBEFORE_TIME_MARGIN, "30");
+    	conditionNotBeforeTime = conditionNotBeforeTime.minusSeconds(Integer.parseInt(allowedNotBeforeTimeMargin));
+    	if (!conditionNotBeforeTime.isBeforeNow()) {
+    		throw new ValidationException("Condition NotBefore is before now: " + conditionNotBeforeTime);
     	}
 	}
 
